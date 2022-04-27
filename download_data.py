@@ -37,7 +37,7 @@ n_total_days = (end_time - start_time).days
 
 subreddits = ['news', 'television', 'worldnews', 'USnews','qualitynews', 'offbeat', 'OutOfTheLoop', 'Oscars', 'boxoffice', 'willsmith', 'entertainment' ]
 
-query = 'slap|will|smith|chris|rock|oscars|oscar'
+query = 'slap|smith|chris|rock|oscars|oscar'
 
 fields = ['author', 'author_fullname', 'created_utc', 'id', 'num_comments',
           'score', 'subreddit', 'subreddit_id', 'title', 'upvote_ratio', 'created']
@@ -53,7 +53,6 @@ else:
                         subreddits,
                         query,
                         fields,
-                        n_total_days,
                         api) for i in tqdm(range(n_total_days))]
 
     data_submissions = pd.concat(results, ignore_index = True)
