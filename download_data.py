@@ -1,5 +1,5 @@
 #%%
-from multiprocessing import Pool
+
 from psaw import PushshiftAPI
 import pandas as pd
 import numpy as np
@@ -64,7 +64,7 @@ comment_fields = ['author', 'body', 'controversiality', 'created_utc',
                   'id', 'link_id', 'parent_id', 'score', 'score_hidden', 'subreddit', 'subreddit_id']
 
 if 'comments.pkl' in os.listdir('data'):
-    data_comments = pd.read_csv('data/comments.pkl')
+    data_comments = pd.read_pickle('data/comments.pkl')
 
 else:
     n,m = data_submissions.shape
@@ -85,4 +85,5 @@ print(data_comments)
 
 #%%
 
+data_comments
 
