@@ -53,7 +53,6 @@ else:
                         subreddits,
                         query,
                         fields,
-                        n_total_days,
                         api) for i in tqdm(range(n_total_days))]
 
     data_submissions = pd.concat(results, ignore_index = True)
