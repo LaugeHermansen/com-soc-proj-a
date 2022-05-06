@@ -99,4 +99,11 @@ for d in corpora_topic.get_documents():
     # plt.imshow(d[1].get_wordcloud(stemmer))
     # plt.title(d[0])
     # plt.show()
-    print(d[1].get_wordcloud(stemmer))
+    plt.imshow(d[1].get_wordcloud(stemmer))
+    plt.show()
+
+#%%
+
+
+
+data2 = pd.read_csv('data/comments.csv', parse_dates=['created_utc'])

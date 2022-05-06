@@ -19,16 +19,17 @@ from sklearn.decomposition import LatentDirichletAllocation
 
 #%%
 
-"""
-This cell can be ignored
 
-This class is just an extension of the porter stemmer.
-It adds a function called reverse stem, that can turn a stem
-back into a real word (not necessarily the word it was before, but
-the shortest seen word whose stem is the given - i.e., a real
-word that has a meaning, and is related to the stem)
-"""
 class MyStemmer(nltk.PorterStemmer):
+
+    """
+    This class is an extension of the porter stemmer.
+    It adds a function called reverse stem, that can turn a stem
+    back into a real word (not necessarily the word it was before, but
+    the shortest seen word whose stem is the given - i.e., a real
+    word that has a meaning, and is related to the stem)
+    """
+
     def __init__(self, filename = None, *args, **kwargs):
         print("Creating stemmer - trying to read ... ", end = "")
         super().__init__(*args, **kwargs)
@@ -55,12 +56,6 @@ class MyStemmer(nltk.PorterStemmer):
         for i, stem in enumerate(stems):
             ret[i] = self.stem(stem, *args, **kwargs)
         return ret
-    
-    def many_reverse_stem(self, stems):
-        ret = [None]*len(stems)
-        for i,s in enumerate(stems):
-            ret[i] = self.reverse_stem(s)
-        return ret
 
     def reverse_stem(self,stem):
         if stem in self.reverse_dict:
@@ -69,6 +64,12 @@ class MyStemmer(nltk.PorterStemmer):
             print(f'Warning: {stem} has not been stemmed before by this stemmer.')
             return stem
     
+    def many_reverse_stem(self, stems):
+        ret = [None]*len(stems)
+        for i,s in enumerate(stems):
+            ret[i] = self.reverse_stem(s)
+        return ret
+
     def save(self):
         print("Saving stemmer ... ", end = "")
         pd.to_pickle(self.reverse_dict, 'data/' + self.filename)
@@ -77,8 +78,11 @@ class MyStemmer(nltk.PorterStemmer):
 #%%
 
 def tokenize_stem_remove(text, stemmed_stopwords, stemmer: MyStemmer):
+    "tokenize, stem and remove unwanted words - return a set"
 
     def tokenize_stem_remove_gen(text):
+        if text == "[removed]":
+            return set()
         try:
             for stemmed_word in map(stemmer.stem, nltk.tokenize.word_tokenize(text.lower())):
                 if stemmed_word in stemmed_stopwords:            pass
@@ -125,11 +129,13 @@ def open_data_files(filename, stemmer: MyStemmer, stemmed_stopwords, restart = F
 
 #Create documents
 
-# 1: one document containing all the words that has been used in this post
-#    and its comments the weihted by how many comments they appear in
-#    (of course +1 if it appears in the submission itself as well)
+
 
 class Document:
+    """
+    This is a document class - 
+    it contains all the words that has been used relating to the same category
+     weihted by how many comments they appear in """
     def __init__(self, old_document = None):
         self.rawcount_tf = defaultdict(int)
         self.n_words = 0
@@ -159,11 +165,6 @@ class Document:
     def words(self):
         return set(self.tf.keys())
     
-    @property
-    def text(self):
-        raise NotImplementedError('\'text\' property of class \'Document\' not implemented')
-        
-
     def read_old(self, old):
         old_vars = vars(old)
         for name in vars(self):
@@ -178,6 +179,11 @@ class Document:
 
 
 class Corpora:
+    """Corpora class
+    
+    contains documents
+
+    """
     def __init__(self, data, split_by_column, renew = False):
 
         print(f"Creating corpora with documents = {split_by_column} ... ")
@@ -223,12 +229,14 @@ class Corpora:
     def compute_tf_for_each_doc(self, data):
         if self.split_by_column != None:
             for document_name, tokens in tqdm(data[[self.split_by_column, 'tokens']].values):
-                for stem in tokens:
-                    self.documents[document_name].rawcount_tf[stem] += 1
-                self.documents[document_name].compute_tf()
+                if isinstance(document_name, str): document_name = [document_name]
+                for doc_name in document_name:
+                    for stem in tokens:
+                        self.documents[doc_name].rawcount_tf[stem] += 1
+                    self.documents[doc_name].compute_tf()
     
     def __repr__(self):
-        return f"Corpora with {self.n_words} words"
+        return f"Corpora with {self.n_words} words and {len(self.documents)} documents"
     
     def path(self):
         if not os.path.exists("data/corpus/"):
@@ -254,7 +262,7 @@ class Corpora:
             vars(self)[variable_name] = pd.read_pickle(f"{path}/{variable_name}.pkl")
             print(f'Variable {variable_name} loaded sucessfully')
             return True
-        except FileNotFoundError:
+        except (FileNotFoundError, AssertionError):
             print(f"Couldn't load {variable_name}, ", end = "")
             if set_none:
                 vars(self)[variable_name] = None
@@ -276,9 +284,7 @@ class Corpora:
             return list(self.documents.items())
     
     def get_doc_word_matrix(self, doc_min_size = 0, recalculate = False):
-        # tf_vectorizer = CountVectorizer(stop_words="english")
-        # tf = tf_vectorizer.fit_transform([doc.text for doc in tqdm(self.documents.values())])
-        # return tf
+
         if None in [self.doc_word_matrix,
                     self.feature_map,
                     self.document_map] or recalculate:
@@ -312,6 +318,8 @@ class Corpora:
     
     def get_doc_size_distribution(self):
         return np.array(list(map(len, self.get_documents())))
+
+
 
 class LDA(LatentDirichletAllocation):
     def __init__(self, *args, **kwargs):
