@@ -37,7 +37,7 @@ n_total_days = (end_time - start_time).days
 
 subreddits = ['news', 'television', 'worldnews', 'USnews','qualitynews', 'offbeat', 'OutOfTheLoop', 'Oscars', 'boxoffice', 'willsmith', 'entertainment' ]
 
-query = 'slap|will|smith|chris|rock|oscars|oscar'
+query = 'slap|smith|chris|rock|oscars|oscar'
 
 fields = ['author', 'author_fullname', 'created_utc', 'id', 'num_comments',
           'score', 'subreddit', 'subreddit_id', 'title', 'upvote_ratio', 'created']
@@ -85,5 +85,11 @@ print(data_comments)
 
 #%%
 
-data_comments
 
+
+def convert_csv(filename):
+    filename = 'data/old/' + filename
+    pd.read_pickle(filename + '.pkl').to_csv(filename + '.csv')
+
+for filename in ['comments', 'submissions']:
+    convert_csv(filename)
